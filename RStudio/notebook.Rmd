@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(readr)
+library(ggplot2)
+library(forecast)
+library(tseries)
+
+```
+
+```{r}
+processed_Apt2 <- read_csv("processed_Apt2.csv")
+```
+
+
+```{r}
+df = as.numeric(processed_Apt2$D0009)
+```
+
+```{r}
+count_ma = ts(na.omit(df), frequency=24*2)
+decomp = stl(count_ma, s.window="periodic")
+deseasonal_cnt <- seasadj(decomp)
+plot(decomp)
+```
+
+
+```{r}
+adf.test(count_ma, alternative = "stationary")
+```
+
+```{r}
+Acf(count_ma, main='')
+Pacf(count_ma, main='')
+```
+```{r}
+count_d1 = diff(deseasonal_cnt, differences = 1)
+plot(count_d1)
+adf.test(count_d1, alternative = "stationary")
+```
+
+```{r}
+Acf(count_d1, main='ACF for Differenced Series')
+Pacf(count_d1, main='PACF for Differenced Series')
+```
+```{r}
+auto.arima(deseasonal_cnt, seasonal=FALSE)
+```
+
+```{r}
+fit<-auto.arima(deseasonal_cnt, seasonal=FALSE)
+```
+
+```{r}
+tsdisplay(residuals(fit), lag.max=24, main='(2,0,3) Model Residuals')
+```
+
+```{r}
+fcast <- forecast(fit, h=30)
+```
+
+```{r}
+plot(fcast)
+```
+
